@@ -8,12 +8,12 @@ namespace AppShoping.ApplicationServices.Components.csvImporter
     {
         public void ImportFoodData(string csvFilePath)
         {
-            ImportProducts("Resources\\Files\\Product.csv");
+            ImportProducts(csvFilePath);
         }
 
         public void ImportPurchaseData(string csvFilePath)
         {
-            ImportPurchase("Resources\\Files\\Purchase.csv");
+            ImportPurchase(csvFilePath);
         }
 
 
