@@ -1,6 +1,6 @@
 ﻿using System.Xml.Linq;
 using AppShoping.ApplicationServices.Components.csvImporter;
-using AppShoping.ApplicationServices.Components.csvReader;
+using AppShoping.ApplicationServices.Components.xmlImporter;
 using AppShoping.DataAccess.Data;
 using AppShoping.DataAccess.Data.Entities;
 using AppShoping.DataAccess.Data.Repositories;
@@ -12,16 +12,16 @@ public class UserCommunication : IUserCommunication
 {
     private readonly IRepository<Food> _foodRepository;
     private readonly IRepository<PurchaseStatistics> _purchaseRepository;
-    private readonly ICsvReader _csvReader;
     private readonly ShopAppDbContext _shopAppDbContext;
     private readonly ICsvImporter _csvImporter;
+    private readonly IXmlImporter _xmlImporter;
 
     private const string AuditDataPath = "Audit.txt";
-    private enum ProductOperation { View, Edit, Delete, Add };
+    private enum ProductOperation { View, Edit, Delete, Add, DeleteAll };
 
 
-    private List<string> shopMenu = new()
-    {
+    private readonly List<string> shopMenu =
+    [
         "1  - Wykaz produktów do zakupu",
         "2  - Dodaj produkt",
         "3  - Dodaj produkt bio",
@@ -31,23 +31,25 @@ public class UserCommunication : IUserCommunication
         "7  - Dodaj dane do statystyk zakupów",
         "8  - Import produktow do zakupu z pliku CSV do DB",
         "9  - Import statystyk zakupów z pliku CSV do DB",
-        "10 - Wyjście z programu",
-    };
+        "10 - Import produktów z pliku XML do DB",
+        "11 - Usuń wszystkie dane z DB",
+        "12 - Wyjście z programu",
+    ];
 
     public UserCommunication(IRepository<Food> foodRepository,
         IRepository<PurchaseStatistics> purchaseRepository,
-        ICsvReader csvReader,
         ShopAppDbContext shopAppDbContext,
-        ICsvImporter csvImporter
+        ICsvImporter csvImporter,
+        IXmlImporter xmlImporter
       )
     {
 
         _foodRepository = foodRepository;
         _purchaseRepository = purchaseRepository;
-        _csvReader = csvReader;
         _shopAppDbContext = shopAppDbContext;
         _shopAppDbContext.Database.EnsureCreated();
         _csvImporter = csvImporter;
+        _xmlImporter = xmlImporter;
         _foodRepository.ItemAdded += OnWriteToFile;
         _foodRepository.ProductDeleted += OnProductDeleted;
 
@@ -81,7 +83,7 @@ public class UserCommunication : IUserCommunication
         foreach (var i in shopMenu)
             Console.WriteLine(i);
 
-        Console.WriteLine("\n------------- Wybierz opcję [1 - 10] ---------------\n");
+        Console.WriteLine("\n------------- Wybierz opcję [1 - 11] ---------------\n");
     }
 
     public void ChoiceOfMenu()
@@ -89,7 +91,7 @@ public class UserCommunication : IUserCommunication
         while (true)
         {
             DisplayMenu();
-            if (int.TryParse(Console.ReadLine(), out int choice) && choice > 0 && choice < 11)
+            if (int.TryParse(Console.ReadLine(), out int choice) && choice > 0 && choice < 13)
             {
                 ExecuteMenuAction(choice);
             }
@@ -130,17 +132,26 @@ public class UserCommunication : IUserCommunication
             case 9:
                 _csvImporter.ImportPurchaseData("Resources\\Files\\Purchase.csv");
                 break;
+
             case 10:
-                ExportFoodListToJsonFile();
+                _xmlImporter.ImportFoodData();
+                break;
+            case 11:
+                DeleteAllDataFromDB();
+                break;
+
+            case 12:
+                ExportFoodListToFiles();
                 break;
         }
     }
 
-    private void ExportFoodListToJsonFile()
+    private void ExportFoodListToFiles()
     {
         try
         {
             _foodRepository.ExportFoodListToJsonFiles();
+            _foodRepository.ExportFoodListToXMLFiles();
             Environment.Exit(0);
         }
         catch (Exception e)
@@ -154,9 +165,16 @@ public class UserCommunication : IUserCommunication
     {
         var products = GetProductData(_shopAppDbContext);
         var purchase = GetPurchaseData(_shopAppDbContext);
-        GroupBy(purchase);
 
-        Console.WriteLine("===============Łączenie danych z tabel=============");
+        if (products.Count == 0 || purchase.Count == 0)
+        {
+            Console.WriteLine("Brak danych do wyświetlenia.");
+            Console.ReadKey();
+            return;
+        }
+
+        GroupBy(purchase);
+        Console.WriteLine("\n\n------------------\n\n");
         JoinTables(products, purchase);
         Console.ReadKey();
         ExportToXml(purchase);
@@ -179,10 +197,12 @@ public class UserCommunication : IUserCommunication
 
         foreach (var price in priceProduct)
         {
+
+            Console.WriteLine($"\t Shop:{price.ShopName}");
             Console.WriteLine($"{price.ProductName}");
             Console.WriteLine($"\t Price : {price.Price}");
             Console.WriteLine($"\t Promotion : {price.Promotion}");
-            Console.WriteLine($"\t Shop:{price.ShopName}");
+
 
         }
     }
@@ -242,13 +262,12 @@ public class UserCommunication : IUserCommunication
         document.Save("Products.xml");
     }
 
-    private List<Food> GetProductData(ShopAppDbContext foods)
+    private static List<Food> GetProductData(ShopAppDbContext foods)
     {
         return foods.Foods.ToList()!;
-
     }
 
-    private List<PurchaseStatistics> GetPurchaseData(ShopAppDbContext purchase)
+    private static List<PurchaseStatistics> GetPurchaseData(ShopAppDbContext purchase)
     {
         return purchase.Purchase.ToList()!;
     }
@@ -282,13 +301,13 @@ public class UserCommunication : IUserCommunication
         }
     }
 
-    private string GetData(string data)
+    private static string GetData(string data)
     {
         Console.WriteLine(data);
         return Console.ReadLine()!;
     }
 
-    private decimal GetProductPrice()
+    private static decimal GetProductPrice()
     {
         while (true)
         {
@@ -301,7 +320,7 @@ public class UserCommunication : IUserCommunication
         }
     }
 
-    private bool GetBooleanResponse(string data)
+    private static bool GetBooleanResponse(string data)
     {
         while (true)
         {
@@ -376,7 +395,7 @@ public class UserCommunication : IUserCommunication
         }
     }
 
-    private void ShowAlert(string message)
+    private static void ShowAlert(string message)
     {
         Console.WriteLine(message);
         Console.ReadKey();
@@ -590,6 +609,24 @@ public class UserCommunication : IUserCommunication
         _foodRepository.Remove(product);
         _foodRepository.Save();
         Console.WriteLine("Produkt usunięty.");
+        Console.ReadKey();
+    }
+
+    private void DeleteAllDataFromDB()
+    {
+        try
+        {
+
+            _shopAppDbContext.Foods.RemoveRange(_shopAppDbContext.Foods);
+            _shopAppDbContext.Purchase.RemoveRange(_shopAppDbContext.Purchase);
+            _shopAppDbContext.SaveChanges();
+            Console.WriteLine("Wyczyszczono dane z tabel.");
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Wystąpił błąd podczas usuwania danych: {ex.Message}");
+        }
         Console.ReadKey();
     }
 }

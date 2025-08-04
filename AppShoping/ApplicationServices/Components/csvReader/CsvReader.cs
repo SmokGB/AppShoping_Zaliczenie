@@ -1,5 +1,5 @@
 ﻿using AppShoping.ApplicationServices.Components.csvReader.Extensions;
-using AppShoping.ApplicationServices.Components.csvReader.Models;
+using AppShoping.ApplicationServices.Components.Models;
 
 namespace AppShoping.ApplicationServices.Components.csvReader
 {

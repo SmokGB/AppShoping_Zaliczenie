@@ -16,13 +16,13 @@
 
   <ItemGroup>
     <None Update="DataAccess\Resources\Audit.txt">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="DataAccess\Resources\Files\Product.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="DataAccess\Resources\product.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="DataAccess\Resources\Files\Purchase.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

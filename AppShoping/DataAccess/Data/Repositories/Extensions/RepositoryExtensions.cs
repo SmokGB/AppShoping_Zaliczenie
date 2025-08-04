@@ -1,29 +1,17 @@
 ﻿using AppShoping.DataAccess.Data.Entities;
-using AppShoping.DataAccess.Data.Repositories;
+using System.Xml.Serialization;
 using System.Text.Json;
+using System.Text;
 
 namespace AppShoping.DataAccess.Data.Repositories.Extensions
 {
     public static class RepositoryExtensions
     {
-        public static void ExportFoodListToJsonFiles<T>(this IRepository<T> repository)
-            where T : class, IEntity
-        {
-            List<T> products = repository.GetAll().ToList();
-
-            if (products.Count == 0)
-            {
-                Console.WriteLine("Brak produktów do eksportu.");
-                return;
-            }
-            var json = JsonSerializer.Serialize(products);
-            File.WriteAllText("product.json", json);
-        }
 
         public static void ImportFoodListFromJson<T>(this IRepository<T> repository)
              where T : class, IEntity
         {
-            if (!File.Exists("product.json"))
+            if (!File.Exists("products.json"))
             {
                 Console.WriteLine("Plik 'product.json' nie istnieje.");
                 return;
@@ -31,7 +19,7 @@ namespace AppShoping.DataAccess.Data.Repositories.Extensions
 
             try
             {
-                var data = File.ReadAllText("product.json");
+                var data = File.ReadAllText("products.json");
                 var items = JsonSerializer.Deserialize<List<T>>(data);
 
                 if (items != null)
@@ -53,23 +41,47 @@ namespace AppShoping.DataAccess.Data.Repositories.Extensions
             }
         }
 
-        public static void WriteAllToConsole(this IReadRepository<IEntity> allFoods)
-        {
-            var items = allFoods.GetAll();
-            int counter = items.Count();
 
-            if (counter > 0)
+
+        private static List<T>? GetProductsOrNotifyEmpty<T>(IRepository<T> repository) where T : class, IEntity
+        {
+            List<T> products = repository.GetAll().ToList();
+
+            if (products.Count == 0)
             {
-                foreach (var item in items)
-                {
-                    Console.WriteLine(item);
-                }
+                Console.WriteLine("Brak produktów do eksportu.");
+                return null;
             }
-            else
+
+            return products;
+        }
+
+        public static void ExportFoodListToJsonFiles<T>(this IRepository<T> repository)
+            where T : class, IEntity
+        {
+            var products = GetProductsOrNotifyEmpty(repository);
+            if (products == null) return;
+
+            var json = JsonSerializer.Serialize(products);
+            File.WriteAllText("products.json", json, Encoding.UTF8);
+
+        }
+
+        public static void ExportFoodListToXMLFiles<T>(this IRepository<T> repository)
+            where T : class, IEntity
+        {
+            var products = GetProductsOrNotifyEmpty(repository);
+            if (products == null) return;
+
+            XmlSerializer serializer = new XmlSerializer(typeof(List<T>));
+            using (var writer = new StreamWriter("products.xml", false, Encoding.UTF8))
             {
-                Console.WriteLine("Pusta lista zakupów  < Powrót do Menu - Wciśnij dowolny klawisz>");
-                Console.ReadKey();
+                serializer.Serialize(writer, products);
             }
+
         }
     }
+
+
+
 }

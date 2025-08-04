@@ -1,5 +1,6 @@
 ﻿using AppShoping.ApplicationServices.Components.csvImporter;
 using AppShoping.ApplicationServices.Components.csvReader;
+using AppShoping.ApplicationServices.Components.xmlImporter;
 using AppShoping.DataAccess.Data;
 using AppShoping.DataAccess.Data.Entities;
 using AppShoping.DataAccess.Data.Repositories;
@@ -16,6 +17,7 @@ services.AddSingleton<IRepository<Food>, SqlRepository<Food>>();
 services.AddSingleton<IRepository<PurchaseStatistics>,SqlRepository<PurchaseStatistics>>();
 services.AddSingleton<ICsvReader, CsvReader>();
 services.AddSingleton<ICsvImporter, CsvImporter>();
+services.AddSingleton<IXmlImporter, XmlImporter>();
 
 services.AddDbContext<ShopAppDbContext>(options =>options
 .UseSqlServer("Data Source=AgaiGrzes\\SQLEXPRESS;Initial Catalog=ShopAppStorage;Integrated Security=True;Encrypt=True;Trust Server Certificate=True"));

@@ -1,4 +1,4 @@
-﻿namespace AppShoping.ApplicationServices.Components.csvReader.Models
+﻿namespace AppShoping.ApplicationServices.Components.Models
 {
     public class Purchase
     {

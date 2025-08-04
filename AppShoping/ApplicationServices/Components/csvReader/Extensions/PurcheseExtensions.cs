@@ -1,4 +1,4 @@
-﻿using AppShoping.ApplicationServices.Components.csvReader.Models;
+﻿using AppShoping.ApplicationServices.Components.Models;
 using System.Globalization;
 
 namespace AppShoping.ApplicationServices.Components.csvReader.Extensions
