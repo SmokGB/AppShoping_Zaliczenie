@@ -161,6 +161,26 @@ public class UserCommunication : IUserCommunication
         }
     }
 
+
+    private static void DisplayInPages<T>(List<T> items, int pageSize, Action<T> printAction)
+    {
+        var list = items.ToList();
+        int totalItems = items.Count;
+
+        for (int i = 0; i < totalItems; i += pageSize)
+        {
+            var batch = list.Skip(i).Take(pageSize);
+
+            foreach (var item in batch)
+            {
+                printAction(item);
+            }
+            Console.WriteLine("------ Naciśnij dowolny klawisz aby kontynuować ------");
+            Console.ReadKey();
+        }
+    }
+
+
     private void CombinedDataFromTables()
     {
         var products = GetProductData(_shopAppDbContext);
@@ -180,6 +200,8 @@ public class UserCommunication : IUserCommunication
         ExportToXml(purchase);
     }
 
+
+
     private static void JoinTables(List<Food> products, List<PurchaseStatistics> purchase)
     {
         var priceProduct = products.Join(purchase,
@@ -193,19 +215,20 @@ public class UserCommunication : IUserCommunication
                                         purchase.Promotion,
 
                                     }).OrderBy(x => x.ProductName)
-                                    .ThenBy(x => x.Price);
+                                    .ThenBy(x => x.Price)
+                                    .ToList();
 
-        foreach (var price in priceProduct)
+        DisplayInPages(priceProduct, 5, price =>
         {
-
-            Console.WriteLine($"\t Shop:{price.ShopName}");
+            Console.WriteLine($"\t Shop: {price.ShopName}");
             Console.WriteLine($"{price.ProductName}");
-            Console.WriteLine($"\t Price : {price.Price}");
+            Console.WriteLine($"\t Price : {Math.Round(price.Price, 2)}");
             Console.WriteLine($"\t Promotion : {price.Promotion}");
-
-
-        }
+        });
+        
     }
+
+
 
     private static void GroupBy(List<PurchaseStatistics> purchase)
     {
@@ -217,16 +240,22 @@ public class UserCommunication : IUserCommunication
                 Min = g.Min(c => c.Price),
                 Average = g.Average(c => c.Price)
             })
-            .OrderBy(x => x.Name);
+            .OrderBy(x => x.Name)
+            .ToList();
 
-        foreach (var grup in groups)
+        
+    DisplayInPages(groups, 5, grup =>
         {
             Console.WriteLine($"{grup.Name}");
-            Console.WriteLine($"\t Max : {grup.Max}");
-            Console.WriteLine($"\t Min : {grup.Min}");
+            Console.WriteLine($"\t Max : {Math.Round(grup.Max, 2)}");
+            Console.WriteLine($"\t Min : {Math.Round(grup.Min, 2)}");
             Console.WriteLine($"\t Avg : {Math.Round(grup.Average, 2)}");
-        }
+        });
+
+
     }
+    
+
 
     private static void ExportToXml(List<PurchaseStatistics> purchase)
     {
