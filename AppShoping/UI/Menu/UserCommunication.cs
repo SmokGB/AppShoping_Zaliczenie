@@ -83,7 +83,7 @@ public class UserCommunication : IUserCommunication
         foreach (var i in shopMenu)
             Console.WriteLine(i);
 
-        Console.WriteLine("\n------------- Wybierz opcję [1 - 11] ---------------\n");
+        Console.WriteLine("\n------------- Wybierz opcję [1 - 12] ---------------\n");
     }
 
     public void ChoiceOfMenu()
@@ -225,7 +225,7 @@ public class UserCommunication : IUserCommunication
             Console.WriteLine($"\t Price : {Math.Round(price.Price, 2)}");
             Console.WriteLine($"\t Promotion : {price.Promotion}");
         });
-        
+
     }
 
 
@@ -243,18 +243,18 @@ public class UserCommunication : IUserCommunication
             .OrderBy(x => x.Name)
             .ToList();
 
-        
-    DisplayInPages(groups, 5, grup =>
-        {
-            Console.WriteLine($"{grup.Name}");
-            Console.WriteLine($"\t Max : {Math.Round(grup.Max, 2)}");
-            Console.WriteLine($"\t Min : {Math.Round(grup.Min, 2)}");
-            Console.WriteLine($"\t Avg : {Math.Round(grup.Average, 2)}");
-        });
+
+        DisplayInPages(groups, 5, grup =>
+            {
+                Console.WriteLine($"{grup.Name}");
+                Console.WriteLine($"\t Max : {Math.Round(grup.Max, 2)}");
+                Console.WriteLine($"\t Min : {Math.Round(grup.Min, 2)}");
+                Console.WriteLine($"\t Avg : {Math.Round(grup.Average, 2)}");
+            });
 
 
     }
-    
+
 
 
     private static void ExportToXml(List<PurchaseStatistics> purchase)
